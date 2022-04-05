@@ -1,0 +1,346 @@
+---
+title: "GLHLTH562 Final Project"
+subtitle: "<br/>Income Tax Revenue Projections"
+author: "Sam Sloate"
+institute: "Duke University"
+date: "4/13/2022"
+output:
+  xaringan::moon_reader:
+    css: [xaringan-themer.css,custom_deck.css]
+    nature:
+      slideNumberFormat: "%current%"
+      highlightStyle: github
+      highlightLines: true
+      ratio: 4:3
+      countIncrementalSlides: true
+    seal: false
+---
+
+class: titleSlide 
+
+```{r xsetup, include=FALSE}
+library(tidyverse)
+library(xaringan)
+library(xaringanthemer)
+library(xaringanExtra)
+library(hrbrthemes)
+library(knitr)
+library(emo)
+
+import_roboto_condensed()
+
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.width=9, fig.height=3.5, fig.retina=3, out.width = "100%", cache = FALSE, echo = TRUE, message = FALSE, warning = FALSE, hiline = TRUE)
+
+# Bring in files
+purl("final.rmd")
+source("final.R")
+
+purl("sensitivity_analysis.rmd")
+source("sensitivity_analysis.R")
+
+# Assign color scheme
+blue1<- "#6a92b9"
+blue2 <- "#0B3B60"
+
+gray1 <- "#82858c"
+gray2 <- "#d4d7db"
+
+```
+
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+style_duo_accent(
+  primary_color = "#0B3B60",
+  secondary_color = "#6a92b9",
+  header_font_google = google_font("Roboto Condensed", font_family="Bold"),
+  text_font_google   = google_font("Roboto Condensed", font_family="Light"),
+  code_font_google   = google_font("Anonymous Pro"),
+  base_font_size = "30px",
+  text_font_size = "1rem",
+  header_h1_font_size = "3.5rem",
+  header_h2_font_size = "2rem",
+  header_h3_font_size = "1rem",
+  padding = "8px 32px 8px 32px",
+)
+```
+
+```{r xaringan-logo, echo=FALSE}
+xaringanExtra::use_logo(
+  image_url = "https://malek.icourban.com/crypto-https-files.nc.gov/osbm/OSBM-logo-header.png?VersionId=Kxo6NFAKpIfvLfY5GNU5oWjHE8NAyj4f"
+)
+```
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+# `r rmarkdown::metadata$title`
+## `r rmarkdown::metadata$subtitle`
+
+<br>
+
+`r emo::ji("graph")`
+---
+class: center, middle
+
+# Objective
+
+Help the Office of State Budget and Management <br> understand **changes in demographics** <br> and **future income tax revenues**.
+---
+class: left
+
+# Research Questions
+.pull-left[
+### 1 
+How are North Carolina demographic trends projected to change over time?
+]
+.pull-right[
+###2 
+How will these changes affect North Carolina’s income tax revenue in 2040?
+]
+---
+class: left
+
+# Table of Contents
+
+**1.** Demographic Changes
+
+**2.** Model Methodology
+
+**3.** Model Results
+
+**4.** Sensitivity Analyses
+
+**5.** Conclusion
+
+---
+class: newTopic, hide_logo
+
+# Demographic Changes
+
+---
+
+class: left
+
+```{r echo=FALSE, fig.height=6, fig.width=8, fig.align="center"}
+popplot
+```
+
+---
+
+class: left
+```{r echo=FALSE, fig.height=6, fig.width=8, fig.align="center"}
+ageplot
+```
+
+---
+
+class: left
+```{r echo=FALSE, fig.height=6, fig.width=8, fig.align="center"}
+raceplot
+```
+
+---
+class: newTopic, hide_logo
+
+# Model Methodology
+---
+
+class: left
+
+## Personal Income Tax Microsimulation Model
+* Uses Current Population Survey (CPS) microdata and OSBM demographic projections
+
+* Adjusts the weights of each observation to simulate changes in the projected number of people with a given set of characteristics
+
+* Adjusts incomes over time
+
+* Calculates North Carolina tax liability 
+
+---
+
+class: newTopic, hide_logo
+
+# Model Results
+
+---
+
+class: left
+
+```{r echo=FALSE, fig.height=6, fig.width=8,  fig.align="center"}
+incplot_small
+```
+
+---
+
+class: left
+
+## Tax Liability
+
+<br>
+<br>
+
+**Note**: We can only predict taxes owed (liability), not taxes paid (revenue)
+
+---
+
+class: left
+
+```{r echo=FALSE, fig.height=6, fig.width=8,  fig.align="center"}
+taxliab_plot
+```
+
+---
+
+class: left
+
+## Tax Liability
+
+<br>
+<br>
+
+What is the main driver of increasing tax liability?
+---
+
+class: left
+
+```{r echo=FALSE, fig.height=6, fig.width=8,  fig.align="center"}
+noincgrowth_plot
+```
+
+---
+
+class: newTopic, hide_logo
+
+# Sensitivity Analyses
+
+---
+
+class: left, hide-count
+
+## Sensitivity Analyses
+
+.panelset[
+.panel[.panel-name[Scenario 1]
+
+**Slower and Faster Income Growth**
+
+* +50% growth rates and 3% inflation
+
+* -50% growth rates and 1% inflation
+]
+
+.panel[.panel-name[Scenario 2]
+
+**Stable Tax Rate**
+
+* Current tax rate: 5.25%
+
+* Current legislation will lower it to 3.99% by 2027
+
+* Scenario 2 keeps the tax rate at **current levels**
+]
+
+.panel[.panel-name[Scenario 3]
+
+**Stable Standard Deduction**
+
+* Current standard deduction is between $10,750 (single) and $21,500 (married)
+
+* The model assumes this will grow a set amount per year to roughly double by 2040
+
+* Scenario 3 keeps the standard deduction at **current levels**
+]
+
+.panel[.panel-name[Scenario 4]
+
+**No Demographic Shifts**
+
+* Current demographics show percentages of White, Black, and young residents declining over time
+
+* Scenario 4 increases the population to 2040 levels but increases all age and race groups proportionally
+
+* **Do demographic shifts matter?**
+]
+
+]
+
+---
+
+class: left
+
+### Scenario 1: Income Growth Changes
+```{r echo=FALSE, out.height="100%", out.width="100%",  fig.align="center"}
+upper_lower_plot
+```
+
+---
+
+class: left
+
+### Scenario 2: Stable Tax Rate
+```{r echo=FALSE,  fig.height=6, out.width="100%",   fig.align="center"}
+taxrate_plot
+```
+
+---
+
+class: left
+
+### Scenario 3: Stable Standard Deduction
+```{r echo=FALSE, fig.height=6, out.width="100%",   fig.align="center"}
+stdded_plot
+```
+
+---
+
+class: left
+
+### Scenario 4: No Demographic Shifts
+```{r echo=FALSE, fig.height=6, out.width="100%",   fig.align="center"}
+nodemchange_plot
+```
+
+---
+
+class: newTopic, hide_logo
+
+# Conclusion
+
+---
+
+class: left
+
+# Takeaways
+* 2040 income tax liability is predicted to be **$19.8B**
+
+---
+
+class: left
+
+# Takeaways
+* 2040 income tax liability is predicted to be **$19.8B**
+
+* **Income growth** is the main driver of tax liability
+
+---
+class: left
+
+# Takeaways
+* 2040 income tax liability is predicted to be **$19.8B**
+
+* **Income growth** is the main driver of tax liability
+
+* Demographic shifts are **not** as important for predicting tax liability
+
+---
+
+class: newTopic 
+
+# Thanks!
+
+`r emo::ji("graph")`
+
+
+
