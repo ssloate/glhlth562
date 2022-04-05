@@ -1,7 +1,7 @@
 ---
-title: "final_project_PITR"
+title: "final"
 author: "Sam Sloate"
-date: "2/22/2022"
+date: "4/7/2022"
 output: html_document
 ---
 
@@ -42,13 +42,13 @@ population <- read.csv(here::here("data/population-projections-2021.csv"), sep="
 
 # Subset relevant columns
 df <- data %>%
-  select(agegroup, race, hispan, sex, starts_with("projwt"), matches("\\d{4}$")) %>%
+  select(agegroup, race, sex, starts_with("projwt"), matches("\\d{4}$")) %>%
   select(-ends_with("growth"), -ends_with("rate"))
 
-df$indexer <- 1:nrow(df)
-
-# Create codebook
+# Create codebook: tax calc
 # makeCodebook(df, replace = TRUE)
+
+
 ```
 
 ``` {r population}
@@ -66,6 +66,9 @@ pop_agg <- population %>%
   summarise(population = sum(Total)) %>% 
   filter(Year>=2019, Year<=2040) %>% 
   rename(year = Year)
+
+# Create codebook: population
+makeCodebook(pop_df, replace = TRUE)
 
 ```
 
@@ -87,7 +90,7 @@ race <- race %>%
   merge(race, by="year") %>% 
   mutate(percent = race_total/total)
 
-### 1b. Age
+### 1c. Age
 agegroup <- pop_df %>% 
   select("Age.0.to.17", "Age.18.to.24", "Age.25.to.44", "Age.45.to.64", "Age.65.Plus", "year") %>% 
   replace(is.na(.), 0) %>% 
@@ -114,8 +117,8 @@ agegroup <- agegroup %>%
 #2.Create base income dataset 
 
 inc_df <- df %>%  
-  select(indexer,starts_with("inc"), starts_with("projwt"), starts_with("cap_gains"), starts_with("adj_tax"), indexer) %>% 
-  select(contains("20"), indexer) 
+  select(starts_with("inc"), starts_with("projwt"), starts_with("cap_gains"), starts_with("adj_tax")) %>% 
+  select(contains("20")) 
 
 names(inc_df) <- gsub(x = names(inc_df), pattern = "cap_gains", replacement = "inccapgains")  
 names(inc_df) <- gsub(x = names(inc_df), pattern = "adj_taxable_inc", replacement = "incadj_taxable_inc")  
