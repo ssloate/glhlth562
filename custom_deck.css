@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,900');
+@import url('https://fonts.googleapis.com/css?family=Libre+Franklin:200,300,400,700,900');
+@import url(https://fonts.googleapis.com/css?family=Anonymous+Pro&display=swap);
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap')
+
+.hide-count .remark-slide-number {
+  display: none;
+}
+
+.titleSlide {
+  background-size: cover;
+  background-color: white;
+}
+
+.titleSlide h3, h4, body {
+  text-align: center;
+  color: black;
+    font-family: 'Roboto Condensed';
+  font-size: 20px;
+  font-weight: 300px;
+}
+
+.titleSlide h1 {
+  text-align: center;
+  color: #0B3B60;
+    font-size: 100px;
+  font-weight: bold;
+  font-family: 'Roboto Condensed'';
+}
+
+.titleSlide h2 {
+  text-align: center;
+  color: #6a92b9;
+    font-size: 50px;
+  font-family: 'Roboto Condensed'';
+}
+
+.titleSlide .remark-slide-number {
+  display: none;
+}
+
+.bigFocus {
+  background-color: white;
+  text-align: left;
+  color: #444444;
+  font-family: 'Libre Franklin';
+  font-size: 40px;
+  font-weight:400;
+}
+
+
+.newTopic {
+  background-color: #0B3B60;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.newTopic h1 {
+  color: white;
+  font-family: 'Roboto Condensed'';
+  font-size: 120px;
+  font-weight:900;
+}
+
+.newTopicSub {
+  background-color: #98A6B6;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.newTopicSub h1 {
+  color: white;
+  font-family: 'Roboto Condensed'';
+  font-size: 100px;
+  font-weight:700;
+}
+
+.verysmall .remark-code {
+  font-size: 35% !important;
+}
+
+/* unvisited link */
+a:link {
+    color: #1f9ac9;
+}
+
+/* visited link */
+a:visited {
+    color: #1f9ac9;
+}
+
+/* mouse over link */
+a:hover {
+    color: #1f9ac9;
+}
+
+/* selected link */
+a:active {
+    color: #1f9ac9;
+}
+
