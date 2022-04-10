@@ -1,0 +1,414 @@
+---
+title: "sensitivity_analysis"
+author: "Sam Sloate"
+date: "4/7/2022"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+# 1. Imports
+library(tidyverse)
+library(lubridate)
+library(hrbrthemes)
+library(dataReporter)
+library(patchwork)
+
+# 2. Fonts
+import_roboto_condensed()
+
+#3. Colors
+blue1<- "#6a92b9"
+blue2 <- "#0B3B60"
+
+gray1 <- "#82858c"
+gray2 <- "#d4d7db"
+
+```
+
+# Prep Base Scenario
+
+```{r base scenario}
+
+# Imports
+data <- read_csv(here::here("data/finished_tax_calc.csv"))
+
+# Clean
+base <- data %>%
+  select(agegroup, age, race, hispan, sex, marst, filestat_simplified, starts_with("projwt"), matches("\\d{4}$")) %>%
+  select(-ends_with("growth"), -ends_with("rate"))
+
+base_df <- base %>%  
+  select(starts_with("adj_nc_net_tax"), starts_with("projwt"), agegroup,) %>% 
+      pivot_longer(starts_with("adj_nc_net_tax"), values_to='inc', names_to="year") %>% 
+      pivot_longer(starts_with("proj"), values_to='weight', names_to="year2") %>% 
+  mutate(year2 = str_sub(year2, -4, -1),
+         year = str_sub(year, -4, -1)) %>% 
+  filter(year==year2) %>% 
+  mutate(weighted_inc=inc*weight) %>% #calculate weighted income
+  group_by(year) %>% 
+  summarise(total_inc=sum(weighted_inc)) %>% # compress to year 
+  mutate(year=as.numeric(year)) %>% 
+  filter(year>=2020) %>% 
+  rename('total_inc_base'='total_inc') %>% 
+  ungroup()
+
+```
+
+# Prep Scenario 1
+
+```{r scenario1 clean}
+
+# Higher and Lower Growth Rates
+
+# Import
+upper <- read_csv(here::here("data/final_upper_scenario.csv"))
+lower <- read_csv(here::here("data/final_lower_scenario.csv"))
+
+upper <- upper %>%
+  select(agegroup, age, race, hispan, sex, marst, filestat_simplified, starts_with("projwt"), matches("\\d{4}$")) %>%
+  select(-ends_with("growth"), -ends_with("rate"))
+
+lower <- lower %>%
+  select(agegroup, age, race, hispan, sex, marst, filestat_simplified, starts_with("projwt"), matches("\\d{4}$")) %>%
+  select(-ends_with("growth"), -ends_with("rate"))
+
+# Clean
+upper_df <- upper %>%  
+  select(starts_with("adj_nc_net_tax"), starts_with("projwt"), agegroup,) %>% 
+      pivot_longer(starts_with("adj_nc_net_tax"), values_to='inc', names_to="year") %>% 
+      pivot_longer(starts_with("proj"), values_to='weight', names_to="year2") %>% 
+  mutate(year2 = str_sub(year2, -4, -1),
+         year = str_sub(year, -4, -1)) %>% 
+  filter(year==year2) %>% 
+  mutate(weighted_inc=inc*weight) %>% #calculate weighted income
+  group_by(year) %>% 
+  summarise(total_inc=sum(weighted_inc)) %>% # compress to year and agegroup
+  mutate(year=as.numeric(year)) %>% 
+  filter(year>=2020) %>% 
+  rename('total_inc_upper'='total_inc') %>% 
+  ungroup()
+
+lower_df <- lower %>%  
+  select(starts_with("adj_nc_net_tax"), starts_with("projwt"), agegroup,) %>% 
+      pivot_longer(starts_with("adj_nc_net_tax"), values_to='inc', names_to="year") %>% 
+      pivot_longer(starts_with("proj"), values_to='weight', names_to="year2") %>% 
+  mutate(year2 = str_sub(year2, -4, -1),
+         year = str_sub(year, -4, -1)) %>% 
+  filter(year==year2) %>% 
+  mutate(weighted_inc=inc*weight) %>% #calculate weighted income
+  group_by(year) %>% 
+  summarise(total_inc=sum(weighted_inc)) %>% # compress to year and agegroup
+  mutate(year=as.numeric(year)) %>% 
+  filter(year>=2020) %>% 
+  rename('total_inc_lower'='total_inc') %>% 
+  ungroup()
+
+upper_lower <- upper_df %>% 
+  merge(lower_df, by='year') %>% 
+  merge(base_df, by='year')
+  
+```
+
+
+# Prep Scenario 2
+ 
+```{r scenario2 clean}
+
+# Stable Tax Rate 
+
+taxrate <- read_csv(here::here("data/final_stable_taxrate_scenario.csv"))
+
+taxrate_df <- taxrate %>%  
+  select(starts_with("adj_nc_net_tax"), starts_with("projwt"), agegroup,) %>% 
+      pivot_longer(starts_with("adj_nc_net_tax"), values_to='inc', names_to="year") %>% 
+      pivot_longer(starts_with("proj"), values_to='weight', names_to="year2") %>% 
+  mutate(year2 = str_sub(year2, -4, -1),
+         year = str_sub(year, -4, -1)) %>% 
+  filter(year==year2) %>% 
+  mutate(weighted_inc=inc*weight) %>% #calculate weighted income
+  group_by(year) %>% 
+  summarise(total_inc=sum(weighted_inc)) %>% # compress to year and agegroup
+  mutate(year=as.numeric(year)) %>% 
+  filter(year>=2020) %>% 
+  ungroup
+
+taxrate_df <- taxrate_df %>% 
+  merge(base_df, by='year')
+
+```
+
+# Prep Scenario 3
+
+```{r scenario3 clean}
+
+# Stable Standard Deviation
+
+stdded <- read_csv(here::here("data/final_stdded_scenario.csv"))
+
+stdded_df <- stdded %>%  
+  select(starts_with("adj_nc_net_tax"), starts_with("projwt"), agegroup,) %>% 
+      pivot_longer(starts_with("adj_nc_net_tax"), values_to='inc', names_to="year") %>% 
+      pivot_longer(starts_with("proj"), values_to='weight', names_to="year2") %>% 
+  mutate(year2 = str_sub(year2, -4, -1),
+         year = str_sub(year, -4, -1)) %>% 
+  filter(year==year2) %>% 
+  mutate(weighted_inc=inc*weight) %>% #calculate weighted income
+  group_by(year) %>% 
+  summarise(total_inc=sum(weighted_inc)) %>% # compress to year and agegroup
+  mutate(year=as.numeric(year)) %>% 
+  filter(year>=2020) %>% 
+  ungroup
+
+stdded_df <- stdded_df %>% 
+  merge(base_df, by='year')
+
+```
+
+
+# Prep Scenario 4
+
+```{r scenario4 clean}
+
+# No Income Growth
+
+# Import
+inc <- read_csv(here::here("data/final_noincgrowth_scenario.csv"))
+
+inc <- inc %>%
+  select(agegroup, starts_with("projwt"), matches("\\d{4}$")) %>%
+  select(-ends_with("growth"), -ends_with("rate"))
+
+# Clean
+noincgrowth_df <- inc %>%  
+  select(starts_with("adj_nc_net_tax"), starts_with("projwt"), agegroup,) %>% 
+      pivot_longer(starts_with("adj_nc_net_tax"), values_to='inc', names_to="year") %>% 
+      pivot_longer(starts_with("proj"), values_to='weight', names_to="year2") %>% 
+  mutate(year2 = str_sub(year2, -4, -1),
+         year = str_sub(year, -4, -1)) %>% 
+  filter(year==year2) %>% 
+  mutate(weighted_inc=inc*weight) %>% #calculate weighted income
+  group_by(year) %>% 
+  summarise(total_inc=sum(weighted_inc)) %>% # compress to year and agegroup
+  mutate(year=as.numeric(year)) %>% 
+  filter(year>=2019) %>% 
+  ungroup()
+
+noincgrowth_df <- noincgrowth_df %>% 
+  merge(base_df, by='year') 
+  
+```
+
+# Prep Scenario 5
+
+```{r scenario5 clean}
+
+# No Demographic Changes 
+
+# Import
+dem <- read_csv(here::here("data/final_nodemchange_scenario.csv"))
+
+dem <- dem %>%
+  select(agegroup, starts_with("projwt"), matches("\\d{4}$")) %>%
+  select(-ends_with("growth"), -ends_with("rate"))
+
+# Clean
+nodemchange_df <- dem %>%  
+  select(starts_with("adj_nc_net_tax"), starts_with("projwt"), agegroup,) %>% 
+      pivot_longer(starts_with("adj_nc_net_tax"), values_to='inc', names_to="year") %>% 
+      pivot_longer(starts_with("proj"), values_to='weight', names_to="year2") %>% 
+  mutate(year2 = str_sub(year2, -4, -1),
+         year = str_sub(year, -4, -1)) %>% 
+  filter(year==year2) %>% 
+  mutate(weighted_inc=inc*weight) %>% #calculate weighted income
+  group_by(year) %>% 
+  summarise(total_inc=sum(weighted_inc)) %>% # compress to year and agegroup
+  mutate(year=as.numeric(year)) %>% 
+  filter(year>=2019) %>% 
+  ungroup()
+
+nodemchange_df <- nodemchange_df %>% 
+  merge(base_df, by='year') 
+  
+```
+
+
+
+
+
+# Graphs
+
+```{r scenario1 graph}
+
+# Changes in Income Growth Rates
+
+label1 <- upper_lower %>% 
+  filter(year==2040) %>% 
+  mutate(diff = (total_inc_upper - total_inc_base)/1000000000) %>% 
+  select(diff) %>% 
+  mutate(diff = round(diff, 1)) %>% 
+  paste0("B") 
+
+label2 <- upper_lower %>% 
+  filter(year==2040) %>% 
+  mutate(diff = (total_inc_lower - total_inc_base)/1000000000) %>% 
+  select(diff) %>% 
+  mutate(diff = round(diff, 1),
+         diff=diff*-1) %>% 
+  paste0("B") 
+
+label3 <- upper_lower %>% 
+  filter(year==2040) %>% 
+  select(total_inc_base) %>% 
+  mutate (total_inc_base = round(total_inc_base/1000000000, 1))%>% 
+  paste0("B") 
+
+label1 <- paste0("+ $", label1)
+label2 <- paste0("- $", label2)
+label3 <- paste0("$", label3)
+
+upper_lower_plot <- ggplot(upper_lower) + 
+  geom_line(aes(x=year, y=total_inc_upper), color=blue1, size = 1, alpha=.7,linetype='dashed') +
+  geom_line(aes(x=year, y=total_inc_lower), color=blue1,size = 1, alpha=.7,linetype='dashed') +
+  geom_line(aes(x=year, y=total_inc_base), color=blue2, size=1) +
+  theme_ipsum_rc(grid = "y") +
+  scale_y_continuous(breaks = c(0, 10000000000, 20000000000, 30000000000), labels = c("$0B", "$10B", "$20B", "$30B"), limits=c(0, 31000000000)) +
+  labs(x = "", y = "", title = "Tax liability is highly dependent on income growth rates.", caption="Source: Personal Income Tax Model Projections.") +
+  theme(axis.title = element_blank(), 
+        legend.title = element_blank()) +
+  annotate("text", x=2025, y=17000000000, label = "+ 50% growth", family='Roboto Condensed', color=blue1, fontface=1) + 
+  annotate("text", x=2025, y=8000000000, label = "- 50% growth", family='Roboto Condensed', color=blue1, fontface=1) + 
+  annotate("text", x=2041.3, y=30000000000, label = label1, family='Roboto Condensed', color="#505050", fontface=1) +
+  annotate("text", x=2041.3, y=13000000000, label = label2, family='Roboto Condensed', color="#505050", fontface=1) +
+  annotate("text", x=2041.3, y=20000000000, label = label3, family='Roboto Condensed', color="#505050", fontface=2)
+
+```
+
+```{r scenario2 graph}
+
+# Stable Tax Rate 
+
+label <- taxrate_df %>% 
+  filter(year==2040) %>% 
+  mutate(diff = total_inc_base/1000000000) %>% 
+  select(diff) %>% 
+  mutate(diff = round(diff, 1)) %>% 
+  paste0("B") 
+label <- paste0("$", label)
+
+
+label2 <- taxrate_df %>% 
+  filter(year==2040) %>% 
+  mutate(diff = (total_inc - total_inc_base)/1000000000) %>% 
+  select(diff) %>% 
+  mutate(diff = round(diff, 1)) %>% 
+  paste0("B") 
+label2 <- paste0("+$", label2)
+
+## line graph
+taxrate_plot <- ggplot(taxrate_df) + 
+  geom_line(aes(x=year, y=total_inc), color=blue1, size = 1,alpha=.7, linetype='dashed') +
+  geom_line(aes(x=year, y=total_inc_base), color=blue2, size=1) +
+  theme_ipsum_rc(grid = "y") +
+  scale_y_continuous(breaks = c(0, 10000000000, 20000000000, 30000000000), labels = c("$0B", "$10B", "$20B", "$30B"), limits=c(0, 30000000000)) +
+  labs(x = "", y = "", title = "Keeping a 5.25% tax rate would increase tax liability by $6B.",caption="Source: Personal Income Tax Model Projections.") +
+  theme(axis.title = element_blank(), legend.title = element_blank()) +
+  annotate("text", x=2029.2, y=20500000000, label = "5.25% Tax Rate", family='Roboto Condensed', color=blue1, fontface=1) + 
+  annotate("text", x=2030, y=11500000000, label = "Baseline", family='Roboto Condensed', color=blue2, fontface=2) + annotate("text", x=2041.2, y=26500000000, label = label2, family='Roboto Condensed', color='#505050', fontface=1) + 
+  annotate("text", x=2041.2, y=20000000000, label = label, family='Roboto Condensed', color='#505050', fontface=2)
+
+
+```
+
+
+```{r scenario3 graph}
+
+# Stable Standard Deduction
+
+label2 <- stdded_df %>% 
+  filter(year==2040) %>% 
+  mutate(diff = (total_inc - total_inc_base)/1000000000) %>% 
+  select(diff) %>% 
+  mutate(diff = round(diff, 1)) %>% 
+  paste0("B") 
+label2 <- paste0("+ $", label2)
+
+## line graph
+stdded_plot <- ggplot(stdded_df) + 
+  geom_line(aes(x=year, y=total_inc), color=blue1, size = 1, linetype='dashed') +
+  geom_line(aes(x=year, y=total_inc_base), color=blue2, size=1) +
+  theme_ipsum_rc(grid = "y") +
+  scale_y_continuous(breaks = c(0, 10000000000, 20000000000, 30000000000), labels = c("$0B", "$10B", "$20B", "$30B"), limits=c(0, 30000000000)) +
+  labs(x = "", y = "", title = "The standard deduction does not drastically affect tax liability.", subtitle="The baseline model assumes it will approximately double in 20 years.", caption = "Source: Personal Income Tax Model Projections.") +
+  theme(axis.title = element_blank(), 
+        legend.title = element_blank()) +
+  annotate("text", x=2028, y=18500000000, label = "Unchanged Std. Deduction", family='Roboto Condensed', color=blue1, fontface=1) + 
+  annotate("text", x=2030, y=11000000000, label = "Baseline", family='Roboto Condensed', color=blue2, fontface=2) +
+  annotate("text", x=2041.3, y=23000000000, label = label2, family='Roboto Condensed', color='#505050', fontface=1) +
+  annotate("text", x=2041.3, y=20000000000, label = label, family='Roboto Condensed', color='#505050', fontface=2)
+
+
+```
+
+
+
+```{r scenario4 graph}
+
+# No income growth
+
+label2 <- round(max(noincgrowth_df$total_inc/1000000000), 1) %>% 
+  paste0("B") 
+label2 <- paste0("$", label2)
+
+## line graph
+noincgrowth_plot <- ggplot(noincgrowth_df) + 
+  geom_area(aes(x=year, y=total_inc), fill=blue2, size = .5, color='white') +
+  geom_area(aes(x=year, y=total_inc_base), fill=blue2, alpha=.5, size=.5, color='white') +
+  theme_ipsum_rc(grid = "y") +
+  scale_y_continuous(breaks = c(0, 5000000000, 10000000000, 15000000000, 20000000000), labels = c("$0B", "$5B", "$10B", "$15B", "$20B"), limits=c(0, 20000000000)) +
+  labs(x = "", y = "", title = "Income growth is driving projected tax liability.", subtitle="Graph shows result of rising population with 2019 income levels.", caption="Source: Personal Income Tax Model Projections.") +
+  theme(axis.title = element_blank(), 
+        legend.title = element_blank()) +
+  annotate("text", x=2041.3, y=10000000000, label = label2, family='Roboto Condensed', color='#505050', fontface=2) +
+  annotate("text", x=2041.3, y=20000000000, label = label, family='Roboto Condensed', color='#505050', fontface=2) +
+  annotate("text", x=2037, y=5000000000, label = str_wrap("Tax liability due to baseline population", 20), family='Roboto Condensed', color='white', fontface=1,) +
+  annotate("text", x=2037, y=13500000000, label = str_wrap("Tax liability due to income growth", 20), family='Roboto Condensed', color='black', fontface=1,)
+
+
+
+```
+
+
+```{r scenario5 graph}
+
+# No demographic changes
+
+label <- round(max(nodemchange_df$total_inc_base/1000000000), 2) %>% 
+  paste0("B") 
+label <- paste0("$", label)
+
+label2 <- round(max(nodemchange_df$total_inc_base/1000000000) - max(nodemchange_df$total_inc/1000000000), 2) %>% 
+  paste0("B") 
+label2 <- paste0("- $", label2)
+
+## line graph
+nodemchange_plot<- ggplot(nodemchange_df) + 
+  geom_line(aes(x=year, y=total_inc), color=blue1,  alpha=1, size=2,linetype='dotted') +
+  geom_line(aes(x=year, y=total_inc_base), color=blue2, alpha=1, size=1) +
+  theme_ipsum_rc(grid = "y") +
+  scale_y_continuous(breaks = c(0, 5000000000, 10000000000, 15000000000, 20000000000), labels = c("$0B", "$5B", "$10B", "$15B", "$20B"), limits=c(0, 21000000000)) +
+  labs(x = "", y = "", title = "Demographic shifts are not driving tax changes.", subtitle="Graph shows results of proportional population increases from 2019 to 2040 levels.", caption="Source: Personal Income Tax Model Projections") +
+  theme(axis.title = element_blank(), 
+        legend.title = element_blank()) +
+  annotate("text", x=2031, y=11000000000, label = "No Demographic Shifts", family='Roboto Condensed', color=blue1, fontface=1) + 
+  annotate("text", x=2029.3, y=15500000000, label = "Baseline", family='Roboto Condensed', color=blue2, fontface=2) +
+  annotate("text", x=2041.5, y=19800000000, label = label, family='Roboto Condensed', color=blue2, fontface=2) +
+  annotate("text", x=2040.5, y=18000000000, label = label2, family='Roboto Condensed', color=blue1, fontface=1)
+
+
+```
+
+
